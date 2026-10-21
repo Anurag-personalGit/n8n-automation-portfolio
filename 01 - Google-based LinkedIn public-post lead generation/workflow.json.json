@@ -1,0 +1,499 @@
+{
+  "name": "Google-based LinkedIn public-post lead generation",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -448,
+        -32
+      ],
+      "id": "8deb672c-99a5-46df-b9f6-d6f120cf970f",
+      "name": "When chat message received",
+      "webhookId": "a686ffe6-e680-49ff-aa52-8b2b8c3a8a52"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a search-query generation agent for a LinkedIn lead-generation workflow.\n\nYour job is to convert the user's search intent into ONE Google search query for SerpAPI.\n\nThe objective is to find PUBLIC LinkedIn POSTS where a person or business is looking to obtain, outsource, commission, build, redesign, repair, or develop a website/web application.\n\nIMPORTANT:\nThe target is a potential CUSTOMER who needs web development services.\n\nDo NOT target people who are themselves looking for employment, jobs, internships, freelance work, or developer positions.\n\nUse LinkedIn public post searches with:\n\nsite:linkedin.com/posts/\n\nInclude ALL of the following buying-intent phrases and their variations in the search query. Do not arbitrarily remove keywords just because the query becomes long:\n\n\"website developer\" \"looking for\"\n\"web development\" \"looking for a developer\"\n\"website development\" \"need a developer\"\n\"website development\" \"looking for\"\n\"website redesign\" \"looking for\"\n\"need a website\"\n\"website required\"\n\"web developer required\"\n\"website development project\"\n\"looking for web development agency\"\n\"website development agency\"\n\"WordPress developer required\"\n\"React developer required\"\n\"PHP developer required\"\n\"Shopify website\" \"looking for\"\n\nAlso include closely related variations that indicate genuine purchasing/project intent, such as:\n\n\"need a website developer\"\n\"need website development\"\n\"need someone to build a website\"\n\"looking for someone to build a website\"\n\"looking for someone to redesign a website\"\n\"need website redesign\"\n\"website needs redesign\"\n\"website needs repair\"\n\"website development services\"\n\"looking for website development services\"\n\"looking for a website agency\"\n\"need a web development agency\"\n\"need a website development company\"\n\"looking for a website development company\"\n\"website project\"\n\"web development project\"\n\"website development work\"\n\nExclude obvious employment/job-seeker intent such as:\n\n\"looking for a job\"\n\"looking for jobs\"\n\"looking for employment\"\n\"seeking employment\"\n\"seeking a job\"\n\"job seeker\"\n\"open to work\"\n\"actively looking for work\"\n\"looking for internship\"\n\"internship\"\n\"career\"\n\"resume\"\n\nThe query should search for LinkedIn POSTS, not LinkedIn profiles.\n\nReturn ONLY the final Google search query.\n\nDo not return JSON.\nDo not return explanations.\nDo not return safety classifications.\nDo not return \"User Safety: safe\".\nDo not return commentary."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -224,
+        -32
+      ],
+      "id": "49acbda1-d8b1-46b1-80fa-e012593af07f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        192
+      ],
+      "id": "dd79acab-7174-40e4-8832-e7e5a12da130",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "193wYAFF6t6fpA94",
+          "name": "OpenRouter account 113"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawOutput = $json.output || \"\";\nconst queries = rawOutput\n  .split(\"\\n\")\n  .map(q => q.trim())\n  .filter(q => q.length > 0)\n  .filter(q => !/^[-*•]?\\s*\\d*\\.?\\s*(user safety|safe|unsafe)/i.test(q));\n\nconst uniqueQueries = [...new Set(queries)];\n\nreturn uniqueQueries.map(query => ({\n  json: {\n    query\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -32
+      ],
+      "id": "348e8ea1-0f81-402d-a5f9-05eab55ffb66",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        352,
+        -32
+      ],
+      "id": "2074962f-ef68-44ec-953e-6c16950369c0",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "q": "={{ $json.query }}",
+        "additionalFields": {
+          "start": "=0",
+          "num": "100",
+          "async": false,
+          "json_restrictor": "organic_results[].{position,title,link,snippet}"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-serpapi.serpApi",
+      "typeVersion": 1,
+      "position": [
+        576,
+        -32
+      ],
+      "id": "404a5fbe-53b6-4ea5-a85a-20fa604130a5",
+      "name": "Google search",
+      "credentials": {
+        "serpApi": {
+          "id": "qDp9NF7aAVtRZIY5",
+          "name": "AK's SerpApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this LinkedIn post and determine whether it is a potential customer lead.\n\nPost URL:\n{{ $json.post_url }}\n\nTitle:\n{{ $json.title }}\n\nSnippet:\n{{ $json.snippet }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a B2B lead qualification agent for a web development company.\n\nYour task is to analyze a public LinkedIn search result and determine whether the person or company behind the post demonstrates genuine buying intent for website or web-development services.\n\nThe input contains:\n\n- post_url\n- title\n- snippet\n\nQUALIFY AS A CUSTOMER LEAD when the post indicates that the person or company wants to purchase, outsource, commission, or obtain help with:\n\n- building a new website\n- website development\n- web development\n- website redesign\n- website repair\n- website maintenance or improvement\n- WordPress development\n- React development\n- PHP development\n- Shopify development\n- e-commerce website development\n- hiring an external web-development agency\n- finding a web developer for a specific project\n- finding someone to build or improve a website\n- requesting recommendations for a website developer or web-development agency\n\nCUSTOMER-INTENT EXAMPLES:\n\n\"We need someone to build our company website.\"\n→ LEAD\n\n\"Looking for a developer to create a website for our business.\"\n→ LEAD\n\n\"Can anyone recommend a good web developer for our new website?\"\n→ LEAD\n\n\"We need help redesigning our website.\"\n→ LEAD\n\n\"Looking for a web development agency.\"\n→ LEAD\n\n\"Our Shopify website needs a complete redesign.\"\n→ LEAD\n\n\"Does anyone know someone who can fix our website?\"\n→ LEAD\n\nDO NOT QUALIFY AS A CUSTOMER LEAD when the post is primarily about:\n\n- looking for a job\n- looking for employment\n- looking for an internship\n- hiring an internal employee\n- recruiting a developer for an internal team\n- developer vacancies\n- employment opportunities\n- a developer looking for clients\n- a freelancer advertising their services\n- an agency advertising its own services\n- someone promoting their web-development services\n- someone saying they are available for work\n\nIMPORTANT DISTINCTION:\n\n\"We are hiring a React developer to join our engineering team.\"\n→ NOT A CUSTOMER LEAD\n\n\"We need a React developer to build our new customer-facing website.\"\n→ CUSTOMER LEAD\n\n\"I'm a WordPress developer looking for clients.\"\n→ NOT A CUSTOMER LEAD\n\n\"Looking for a WordPress developer to build our business website.\"\n→ CUSTOMER LEAD\n\n\"I'm looking for a web developer job.\"\n→ NOT A CUSTOMER LEAD\n\n\"Looking for someone to develop our website.\"\n→ CUSTOMER LEAD\n\nDO NOT ASSUME INFORMATION.\n\nOnly extract information supported by the supplied title or snippet.\n\nIf a person's name is not available, use an empty string.\n\nIf a company name is not available, use an empty string.\n\nIf technology is not explicitly mentioned, use an empty string.\n\nIf the requirement cannot be determined, use an empty string.\n\nLEAD CLASSIFICATION:\n\nis_lead:\ntrue only when there is reasonable evidence of customer/project buying intent.\n\nis_lead:\nfalse when the post is a job-seeking, employment, recruitment, service-provider, promotional, or otherwise irrelevant post.\n\nrelevance:\n\nHigh:\nClear and specific customer/project requirement.\n\nMedium:\nLikely customer intent but requirement is less specific.\n\nLow:\nWeak or ambiguous relevance.\n\nlead_type should describe the actual requirement, for example:\n\n- New website\n- Website redesign\n- Website repair\n- Web development project\n- WordPress development\n- React development\n- PHP development\n- Shopify development\n- Web development agency\n- Website developer recommendation\n- Other web-development requirement\n\nOUTPUT:\n\nReturn ONLY valid JSON.\n\nDo not use Markdown.\n\nDo not use code fences.\n\nDo not add explanations outside the JSON.\n\nUse exactly this structure:\n\n{\n  \"is_lead\": true,\n  \"lead_type\": \"\",\n  \"person_name\": \"\",\n  \"company_name\": \"\",\n  \"requirement\": \"\",\n  \"technology\": \"\",\n  \"post_url\": \"\",\n  \"relevance\": \"High\",\n  \"reason\": \"\"\n}\n\nThe post_url MUST be copied exactly from the input.\n\nis_lead MUST be boolean true or false.\n\nrelevance MUST be exactly one of:\n\nHigh\nMedium\nLow\n\nDo not invent names, companies, technologies, or requirements."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1248,
+        -32
+      ],
+      "id": "ee3df6ab-cf0d-4f9a-873f-b919ec1e2ab8",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        240
+      ],
+      "id": "f2cf6086-ed55-44f0-b48c-b3ce0f3cb500",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "193wYAFF6t6fpA94",
+          "name": "OpenRouter account 113"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "160W5tBsksBaW1ZK4cDriBwIfsT5GQD30ubpaUfTCQZY",
+          "mode": "list",
+          "cachedResultName": "Webscraper Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/160W5tBsksBaW1ZK4cDriBwIfsT5GQD30ubpaUfTCQZY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Extracted Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/160W5tBsksBaW1ZK4cDriBwIfsT5GQD30ubpaUfTCQZY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "is_lead",
+              "displayName": "is_lead",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Person",
+              "displayName": "Person",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lead Type",
+              "displayName": "Lead Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Requirement",
+              "displayName": "Requirement",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Technology",
+              "displayName": "Technology",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Post",
+              "displayName": "LinkedIn Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Relevance",
+              "displayName": "Relevance",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1840,
+        -32
+      ],
+      "id": "ac1d6f84-bd42-4088-abf1-b1ef8334fd91",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "F9FfUsZWvyg4utCl",
+          "name": "AK Google sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 10,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1024,
+        -32
+      ],
+      "id": "0348f74d-0ba1-44e1-a55d-d4eedaadc84b",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"is_lead\": false,\n  \"lead_type\": \"\",\n  \"person_name\": \"\",\n  \"company_name\": \"\",\n  \"requirement\": \"\",\n  \"technology\": \"\",\n  \"post_url\": \"https://www.linkedin.com/posts/example-post\",\n  \"relevance\": \"Low\",\n  \"reason\": \"The post does not demonstrate genuine intent to purchase or outsource web development services.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1472,
+        240
+      ],
+      "id": "090c1032-5bff-4724-93c4-6b8747179b92",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all();\n\nreturn inputData.map(item => {\n\n  const rawOutput = item.json.output;\n\n  let lead;\n\n  if (typeof rawOutput === 'string') {\n    lead = JSON.parse(rawOutput);\n  } else {\n    lead = rawOutput;\n  }\n\n  return {\n    json: {\n      is_lead: lead.is_lead ?? false,\n      Person: lead.person_name ?? \"\",\n      Company: lead.company_name ?? \"\",\n      \"Lead Type\": lead.lead_type ?? \"\",\n      Requirement: lead.requirement ?? \"\",\n      Technology: lead.technology ?? \"\",\n      \"LinkedIn Post\": lead.post_url ?? \"\",\n      Relevance: lead.relevance ?? \"\",\n      Reason: lead.reason ?? \"\"\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        -32
+      ],
+      "id": "0dca8acf-1334-4b3c-a162-db51fd3229e6",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all();\n\nconst posts = [];\nconst seenUrls = new Set();\n\nfor (const item of inputData) {\n\n    const results = item.json.organic_results || [];\n\n    for (const result of results) {\n\n        const url = result.link || \"\";\n\n        // We only want public LinkedIn posts\n        if (!url.includes(\"linkedin.com/posts/\"))\n        {\n            continue;\n        }\n\n        const cleanUrl = url\n            .split(\"?\")[0]\n            .replace(/\\/$/, \"\");\n\n        // Remove duplicate posts\n        if (seenUrls.has(cleanUrl)) {\n            continue;\n        }\n\n        seenUrls.add(cleanUrl);\n\n        posts.push({\n            json: {\n                post_url: cleanUrl,\n                title: result.title || \"\",\n                snippet: result.snippet || \"\",\n                search_position: result.position || null,\n                source: \"SerpAPI\"\n            }\n        });\n    }\n}\n\nreturn posts;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -32
+      ],
+      "id": "dd37881b-90fa-48b3-8fd5-9f17cbd23980",
+      "name": "URL Converter",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Google search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google search": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "URL Converter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URL Converter": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a413ef04-6879-445b-bb44-963e849f9206",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e99e0d1157c9445a053edb1d8bcb3c19869f806f2b50808813faa4f314de9dd4"
+  },
+  "nodeGroups": [],
+  "id": "ocoICqKw30vyyrik",
+  "tags": []
+}

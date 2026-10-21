@@ -1,0 +1,283 @@
+{
+  "name": "Modified LinkedIn Content W/F",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "LinkedIn Content Creation",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Post Idea"
+            },
+            {
+              "fieldLabel": "Style",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Funny"
+                  },
+                  {
+                    "option": "Contrary"
+                  },
+                  {
+                    "option": "Informative"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d587deec-ac3f-4721-8249-b848ee84a8cd",
+      "name": "On form submission",
+      "webhookId": "c0e76822-eabb-4bef-a2c2-1e7fb51f1164"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json['Post Idea'] }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an elite LinkedIn post writer trained to produce crisp, no-fluff, systems-driven content.\n\nOBJECTIVE:\nWrite a high-impact LinkedIn post that challenges conventional thinking, delivers clear insight, and drives meaningful discussion.\n\nCONTENT REQUIREMENTS:\n\nBegin with a bold, pattern-breaking hook that immediately creates curiosity or tension.\nUse storytelling to illustrate a real problem, insight, or shift in thinking (personal, observed, or realistic).\nDeliver a clear takeaway rooted in logic, systems thinking, or first principles.\nAvoid generic motivation; focus on specific, thought-provoking ideas.\nKeep language simple, human, and natural. It should feel written by a sharp thinker, not AI.\nThere should not be any complex words. A layman should be able to undertand it\n\nSTRUCTURE RULES:\n\nUse a MINIMUM of 3 paragraphs and MAXIMUM of 4 paragraphs .\nEach paragraph must contain 2–3 sentences (not fixed).\nMaintain a strong narrative flow: Hook → Context/Story → Insight → Conclusion + Question.\n\nENGAGEMENT RULES:\n\nEnd with a sharp, open-ended question that invites serious, professional discussion (avoid generic engagement bait).\nAdd 4–6 relevant, non-generic hashtags on the final line after the question.\nLightly incorporate 1–3 subtle emoticons where they enhance tone (e.g., 🙂, ⚡, 🤔). Do not overuse.\n\nSTYLE RULES:\n\nPrioritize clarity, logic, and insight over fluff or inspiration.\nChallenge broken systems, lazy thinking, or widely accepted norms when appropriate.\nDo not seek validation or sound agreeable.\nAvoid buzzwords, clichés, and overused LinkedIn phrases.\nUse single quotes if necessary. Do NOT use double quotes.\nDo NOT use markdown or backticks.\n\nTITLE ALIGNMENT:\n\nEnsure the post strongly reflects and delivers on the given title/topic.\n\nIMAGE PROMPT:\n\nAlso generate an imageprompt (under 30 words).\nIt should visually represent the core tension, problem, or insight from the post.\nKeep it concrete and vivid, not abstract.\n\nOUTPUT FORMAT (STRICT):\nReturn ONLY one JSON object with no additional text:\n{\"post\": \"...\", \"prompt\": \"...\"}\n\nSELF-CHECK BEFORE RESPONDING:\n\nEach paragraph has 2–3 sentences.\nFinal paragraph ends with a question mark.\nLast line includes 4–6 hashtags.\nNo double quotes anywhere inside post or imageprompt.\nTotal character count is under 3000.\nWriting feels natural, sharp, and non-robotic.\nEmoticons are used sparingly and appropriately.\n\nNow generate the JSON."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        272,
+        0
+      ],
+      "id": "310e06e8-90d9-4ced-9dd6-8c5bd45c57b9",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "cohere/north-mini-code:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        224,
+        240
+      ],
+      "id": "824f1167-ea34-478c-8b71-aaffd07f29fd",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "4bR8ez8p98DoLwFM",
+          "name": "first openRouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"post\": \"Detailed post\",\n\t\"prompt\": \"AI generated children image\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        240
+      ],
+      "id": "1b10fda1-784c-47e8-919d-bb81818f987b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://router.huggingface.co/nscale/v1/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer "
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "image/png"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $('AI Agent').item.json.output.prompt }}\",\n\"model\": \"black-forest-labs/FLUX.1-schnell\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        640,
+        0
+      ],
+      "id": "083dd6e9-9078-4bf9-b2d3-c69b1f6880ec",
+      "name": "Image generation by Hugging face"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        0
+      ],
+      "id": "62bb6b98-b359-4b92-833d-7bb9775c4616",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "person": "QRMr2Ks_QA",
+        "text": "={{ $('AI Agent').item.json.output.post }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        0
+      ],
+      "id": "9bfa6868-71d0-4643-8ee6-ed950293817a",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "XZ9fqjoS4JJqBlnk",
+          "name": "AK LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "anuragkulkarni96@gmail.com",
+        "subject": "Approval required",
+        "message": "={{ $('AI Agent').item.json.output.post }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "1cb30f52-caf7-4344-9a14-a610c2300aed",
+      "name": "Human in Loop",
+      "webhookId": "b133b9d4-8015-4048-a50a-bc61e9d53aa8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YbD3ewEhVwETZmN7",
+          "name": "Gmail account 201"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Image generation by Hugging face",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image generation by Hugging face": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Human in Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human in Loop": {
+      "main": [
+        [
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "18120957-0712-48c5-bc85-4ff5689befb0",
+  "meta": {
+    "instanceId": "e99e0d1157c9445a053edb1d8bcb3c19869f806f2b50808813faa4f314de9dd4"
+  },
+  "nodeGroups": [],
+  "id": "g6cmWIuMViQuWIin",
+  "tags": []
+}
