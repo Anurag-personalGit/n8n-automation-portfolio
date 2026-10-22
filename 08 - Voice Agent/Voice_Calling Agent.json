@@ -1,0 +1,592 @@
+{
+  "name": "Voice_Calling Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        -64
+      ],
+      "id": "3b1eb1e9-fc25-4d67-a9f9-ad0eda7fedae",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1akKrs1grAXUPCZ_s6IHpd9WAz9hb0GGthqPrYedqQT4",
+          "mode": "list",
+          "cachedResultName": "AI Agents Calling sheet sample",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1akKrs1grAXUPCZ_s6IHpd9WAz9hb0GGthqPrYedqQT4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Calls_24June",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1akKrs1grAXUPCZ_s6IHpd9WAz9hb0GGthqPrYedqQT4/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -336,
+        -64
+      ],
+      "id": "141ea59b-5fa4-4939-a783-c521d6cb317a",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "F9FfUsZWvyg4utCl",
+          "name": "AK Google sheet"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -64
+      ],
+      "id": "b7ad563a-e0b0-441a-80c9-50b114125bd2",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bolna.ai/call",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "agent_id",
+              "value": "adf6161d-bea4-443a-bdbe-c60438266396"
+            },
+            {
+              "name": "recipient_phone_number",
+              "value": "=+91{{ $json['phone number'] }}"
+            },
+            {
+              "name": "callback_url",
+              "value": "https://n8n.coachshwetagupta.com/webhook/bolna-callback"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        128,
+        -64
+      ],
+      "id": "22e2e11d-6225-4b8c-883d-9d8260eada3a",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1aKLfv4pKmkBFa6q",
+          "name": "AK calling tool"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $getWorkflowStaticData('global');\nreturn [{ json: { execution_id: data.execution_id } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -64
+      ],
+      "id": "21c3e80b-857a-41e1-8b62-ebd0e52d4081",
+      "name": "Execution ID get stored"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $getWorkflowStaticData('global');\ndata.execution_id = $input.first().json.execution_id;\nreturn [{ json: { stored: true, execution_id: $input.first().json.execution_id } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -64
+      ],
+      "id": "737d3f3e-9558-4ee2-aae7-6d404546478d",
+      "name": "Stored Execution Id"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.bolna.ai/executions/{{ $json.execution_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        -64
+      ],
+      "id": "ed54761e-99a1-4b6c-8b2a-585a1583ba3f",
+      "name": "Transcript",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1aKLfv4pKmkBFa6q",
+          "name": "AK calling tool"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a836cba2-6291-46d6-bb4f-f349c7562b2d",
+              "leftValue": "{{ $json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "e3e5c9db-e8ac-4117-8b6f-d6b853ca940b",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "busy",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "fc50f123-75aa-4696-8f49-651baf6a4f87",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "dropped",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "9f3bb9e2-8a6e-4866-8ffe-44c75db42dec",
+              "leftValue": "={{ $json.transcript }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1024,
+        -64
+      ],
+      "id": "0330734e-bdb8-4fec-a91e-1e0191e43630",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a structured data extractor for sales calls.\n\nGiven the following call summary, extract and return the following fields in JSON:\n- summary\n\nUse plain values and infer where necessary. Format output as a clean JSON object.\n\nCALL SUMMARY:\n{{ $json.transcript }}\n\nOutput format should be \n{\n  \"summary\": summary\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1248,
+        -160
+      ],
+      "id": "2a976e9a-e65c-4ee0-838d-3fac834d3277",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        32
+      ],
+      "id": "a91a6349-e569-4a56-a778-d6dc6390f48a",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "4bR8ez8p98DoLwFM",
+          "name": "first openRouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"summary\": \"Person is interested\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1360,
+        64
+      ],
+      "id": "d149ca38-5240-4d61-9095-ffb0dd711b0e",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        192
+      ],
+      "id": "58296993-a425-4cec-a5c9-d681c906db55",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "hL85zWbXXicE1sE8",
+          "name": "n8n application"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1akKrs1grAXUPCZ_s6IHpd9WAz9hb0GGthqPrYedqQT4",
+          "mode": "list",
+          "cachedResultName": "AI Agents Calling sheet sample",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1akKrs1grAXUPCZ_s6IHpd9WAz9hb0GGthqPrYedqQT4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Calls_24June",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1akKrs1grAXUPCZ_s6IHpd9WAz9hb0GGthqPrYedqQT4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Get row(s) in sheet').item.json.row_number }}",
+            "status": "={{ $('Transcript').item.json.status }}",
+            "execution ID": "={{ $('HTTP Request').item.json.execution_id }}",
+            "Summary": "={{ $json.output.summary }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "First name",
+              "displayName": "First name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "phone number",
+              "displayName": "phone number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "execution ID",
+              "displayName": "execution ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1888,
+        176
+      ],
+      "id": "07f32cd6-1058-4c81-9c3d-69e71e2e0c76",
+      "name": "Upadte sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "F9FfUsZWvyg4utCl",
+          "name": "AK Google sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1456,
+        400
+      ],
+      "id": "61818e20-5602-4acc-9689-ed22564429aa",
+      "name": "Wait",
+      "webhookId": "6189d681-da08-459a-b286-a1f0d5211c0b"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Stored Execution Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stored Execution Id": {
+      "main": [
+        [
+          {
+            "node": "Execution ID get stored",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execution ID get stored": {
+      "main": [
+        [
+          {
+            "node": "Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Upadte sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Execution ID get stored",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upadte sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d05faaf3-7b88-42fb-98c3-6d141ff7c0c5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e99e0d1157c9445a053edb1d8bcb3c19869f806f2b50808813faa4f314de9dd4"
+  },
+  "nodeGroups": [],
+  "id": "DCbeMqJvFLMKk8uW",
+  "tags": []
+}
