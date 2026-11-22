@@ -1,0 +1,273 @@
+{
+  "name": "TripAdviser Scrapper",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        32
+      ],
+      "id": "9a3f1b44-e443-465b-81aa-416f47b5fb52",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "80c0d90d-5bd0-4382-8482-aedb5adf3642",
+              "name": "Location",
+              "value": "JW Marriot Hotel, Pune",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -144,
+        32
+      ],
+      "id": "0c7980e3-e300-4b1e-8af9-a522edbb004c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "dbEyMBriog95Fv8CW",
+          "mode": "list",
+          "cachedResultName": "Tripadvisor Scraper (maxcopell/tripadvisor)",
+          "cachedResultUrl": "https://console.apify.com/actors/dbEyMBriog95Fv8CW/input"
+        },
+        "customBody": "={\n    \"currency\": \"INR\",\n    \"includeAiReviewsSummary\": false,\n    \"includeAttractions\": false,\n    \"includeHotels\": true,\n    \"includeNearbyResults\": false,\n    \"includePriceOffers\": false,\n    \"includeRestaurants\": false,\n    \"includeTags\": false,\n    \"includeVacationRentals\": false,\n    \"language\": \"en\",\n    \"maxItemsPerQuery\": 10,\n    \"query\": \"{{ $json.Location }}\"\n} ",
+        "timeout": {}
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        128,
+        32
+      ],
+      "id": "db23feea-9575-407b-8ebc-5d000736bbea",
+      "name": "Tripadvisor scrapper",
+      "alwaysOutputData": true,
+      "credentials": {
+        "apifyApi": {
+          "id": "VUxj8AZiSGmE7UVn",
+          "name": "AK's Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Sc6_EDZ3arYCeHJNLyP2r--8-9vpaPbyzs0kxoGqlsk",
+          "mode": "list",
+          "cachedResultName": "WebScraper Sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Sc6_EDZ3arYCeHJNLyP2r--8-9vpaPbyzs0kxoGqlsk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2109795639,
+          "mode": "list",
+          "cachedResultName": "Trip_advisor",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Sc6_EDZ3arYCeHJNLyP2r--8-9vpaPbyzs0kxoGqlsk/edit#gid=2109795639"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Type": "={{ $json.type }}",
+            "Category": "={{ $json.category }}",
+            "Name": "={{ $json.name }}",
+            "Rating": "={{ $json.rating }}",
+            "Phone Number": "={{ $json.phone }}",
+            "Price Range": "={{ $json.priceRange }}",
+            "No. of Reviews": "={{ $json.numberOfReviews }}",
+            "Email": "={{ $json.email }}",
+            "Website": "={{ $json.website }}"
+          },
+          "matchingColumns": [
+            "Title"
+          ],
+          "schema": [
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone Number",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "No. of Reviews",
+              "displayName": "No. of Reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Price Range",
+              "displayName": "Price Range",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        32
+      ],
+      "id": "21542f4a-14e0-4318-a25a-37c9a3f3393f",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "F9FfUsZWvyg4utCl",
+          "name": "AK Google sheet"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Tripadvisor scrapper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tripadvisor scrapper": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4d509416-2e47-4793-949e-5db7663c8701",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e99e0d1157c9445a053edb1d8bcb3c19869f806f2b50808813faa4f314de9dd4"
+  },
+  "nodeGroups": [],
+  "id": "xQ4htQMhrhUSlKQb",
+  "tags": []
+}

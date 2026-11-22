@@ -1,0 +1,233 @@
+{
+  "name": "Google Maps Scrapper",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6fa1fac5-cf08-49f6-95a4-f5ef51c0d17c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "edc0dd8c-d237-4055-90c4-a362eec95744",
+              "name": "Search Term",
+              "value": "Interior Design Company",
+              "type": "string"
+            },
+            {
+              "id": "13d43c99-4fe9-495f-a583-f40c299f983d",
+              "name": "Location",
+              "value": "Pune",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "8048f332-08a8-48d7-92e3-691cd58592e7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Sc6_EDZ3arYCeHJNLyP2r--8-9vpaPbyzs0kxoGqlsk",
+          "mode": "list",
+          "cachedResultName": "WebScraper Sheets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Sc6_EDZ3arYCeHJNLyP2r--8-9vpaPbyzs0kxoGqlsk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1082723821,
+          "mode": "list",
+          "cachedResultName": "Google_Maps",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Sc6_EDZ3arYCeHJNLyP2r--8-9vpaPbyzs0kxoGqlsk/edit#gid=1082723821"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{ $json.title }}",
+            "Address": "={{ $json.address }}",
+            "City": "={{ $json.city }}",
+            "Website": "={{ $json.website }}",
+            "Email": "=",
+            "Phone": "={{ $json.phone }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "City",
+              "displayName": "City",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        0
+      ],
+      "id": "93622366-9310-4e72-99c1-c341830d37e8",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "F9FfUsZWvyg4utCl",
+          "name": "AK Google sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "Run actor and get dataset",
+        "actorSource": "store",
+        "actorId": {
+          "__rl": true,
+          "value": "nwua9Gu5YrADL7ZDj",
+          "mode": "list",
+          "cachedResultName": "Google Maps Scraper (compass/crawler-google-places)",
+          "cachedResultUrl": "https://console.apify.com/actors/nwua9Gu5YrADL7ZDj/input"
+        },
+        "customBody": "={\n    \"includeWebResults\": false,\n    \"language\": \"en\",\n    \"locationQuery\": \"{{ $json['Location'] }}\",\n    \"maxCrawledPlacesPerSearch\": 10,\n    \"maxImages\": 0,\n    \"maximumLeadsEnrichmentRecords\": 0,\n    \"scrapeContacts\": false,\n    \"scrapeDirectories\": false,\n    \"scrapeImageAuthors\": false,\n    \"scrapePlaceDetailPage\": false,\n    \"scrapeReviewsPersonalData\": true,\n    \"scrapeTableReservationProvider\": false,\n    \"searchStringsArray\": [\n        \"{{ $json['Search Term'] }}\"\n    ],\n    \"skipClosedPlaces\": false\n}",
+        "timeout": {}
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "c19ea8ae-752f-4752-aaf6-3984a53d924b",
+      "name": "Google Maps Scrapper",
+      "credentials": {
+        "apifyApi": {
+          "id": "VUxj8AZiSGmE7UVn",
+          "name": "AK's Apify account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Google Maps Scrapper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Maps Scrapper": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3da63e9f-965f-44f7-a36b-5db5b4ea309a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e99e0d1157c9445a053edb1d8bcb3c19869f806f2b50808813faa4f314de9dd4"
+  },
+  "nodeGroups": [],
+  "id": "nh5iDiu7VErbmr3Y",
+  "tags": []
+}
